@@ -16,8 +16,8 @@ module test_seq_gen(
     localparam int PAUSE_MIN = 0;
     localparam int PAUSE_MAX = 32;
 
-    int PAUSE_SEED = 99;
-    int ERROR_SEED = 99;
+    int pause_seed = 99;
+    int error_seed = 99;
 
     int bit_cnt;
     int pause_cnt;
@@ -88,7 +88,7 @@ module test_seq_gen(
                 end
 
                 // get random inter frame gap
-                if (bit_cnt == 1) pause_length <= $dist_uniform(PAUSE_SEED, PAUSE_MIN, PAUSE_MAX);
+                if (bit_cnt == 1) pause_length <= $dist_uniform(pause_seed, PAUSE_MIN, PAUSE_MAX);
 
                 // if bit flip index is greater than sequence length - 1 error is not injected
                 if ((err_inj_index < 11) && (err_inj_index == bit_cnt)) m_axis_tdata <= ~GOLDEN_SEQ[bit_cnt];
@@ -103,7 +103,7 @@ module test_seq_gen(
                 if (pause_cnt == pause_length - 1) begin
                     pause_cnt <= 0;
                     // get erro injection index for next frame
-                    err_inj_index <= $dist_uniform(ERROR_SEED, 0, 21);
+                    err_inj_index <= $dist_uniform(error_seed, 0, 21);
                 end else pause_cnt <= pause_cnt + 1;
             end
 
