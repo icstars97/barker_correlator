@@ -1,3 +1,5 @@
+
+// detects 11 bit barker pattern in input data stream
 module correlation_barker #(
     parameter int ARCH_TYPE = 0
 ) (
@@ -17,7 +19,7 @@ module correlation_barker #(
     logic tlast_q;
 
     generate
-        if (ARCH_TYPE == 0) begin : dummy
+        if (ARCH_TYPE == 0) begin : dummy // low performance, low resource cost
             always_ff @(posedge i_clk) begin
                 if (i_rst_n == 1'b0) begin
                     corr_reg <= {11{1'b0}};
@@ -25,6 +27,7 @@ module correlation_barker #(
                     s_tready <= 1'b0;
                     m_tuser <= 1'b0;
                     m_tvalid <= 1'b0;
+                    tlast_q <= 1'b0;
                 end else begin
                     if (m_tready == 1'b1) begin
                         s_tready <= 1'b1;
@@ -34,11 +37,20 @@ module correlation_barker #(
                         end else begin
                             tlast_q <= 1'b0;
                         end
-                        m_tvalid <= tlast_q;
+                        // all data latch, ready to xor
+                        if (tlast_q == 1'b1) begin
+                            m_tvalid <= 1'b1;
+                            m_tuser <= ~|(corr_reg ^ TARGET_SEQ);
+                        end else begin
+                            m_tuser <= 1'b0;
+                            m_tvalid <= 1'b0;
+                        end
                     end else begin
                         m_tvalid <= 1'b0;
+                        m_tuser <= 1'b0;
+                        s_tready <= 1'b0;
                     end
-                    m_tuser <= ~|(corr_reg ^ TARGET_SEQ);
+
                 end
             end
         end
