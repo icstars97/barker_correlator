@@ -17,8 +17,8 @@ module correlation_barker_wrapper #(
         .s_tdata(s_axis.tdata),
         .s_tvalid(s_axis.tvalid),
         .s_tlast(s_axis.tlast),
-        .s_tready(s.axis_tready),
-        .m_tuser(s_axis.tuser),
+        .s_tready(s_axis.tready),
+        .m_tuser(m_axis.tuser),
         .m_tvalid(m_axis.tvalid),
         .m_tready(m_axis.tready)
     );
