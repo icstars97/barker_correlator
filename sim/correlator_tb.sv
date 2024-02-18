@@ -27,8 +27,6 @@ module correlator_tb();
     initial begin
         for (i=0; i<5; i=i+1) @(posedge clk25);
         rst_n = 1'b1;
-        for (i=0; i<500; i=i+1) @(posedge clk25);
-        $finish();
     end
 
     // test pattern generator
@@ -66,10 +64,13 @@ module correlator_tb();
     );
 
     // compare correct response with actual
-    test_mon u_monitor (
+    test_mon #(
+        .CYCLE_COUNT(4)
+    ) u_monitor (
         .i_clk(clk_corr),
         .i_rst_n(rst_n),
-        .s_axis(corr_m_axis.slave)
+        .gen_s_axis(corr_s_axis.slave),
+        .dut_s_axis(corr_m_axis.slave)
     );
 
 endmodule
