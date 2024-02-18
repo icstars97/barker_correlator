@@ -13,7 +13,7 @@ module correlation_barker #(
     output logic m_tvalid,
     input logic m_tready
 );
-    localparam TARGET_SEQ = 11'b11100010010;
+    localparam logic [10:0] TARGET_SEQ = 11'b11100010010;
 
     logic [10:0] corr_reg;
     logic tlast_q;
