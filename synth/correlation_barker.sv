@@ -59,7 +59,7 @@ module correlation_barker #(
             end
         end
 
-        if (ARCH_TYPE == 1) begin : reverse_feed
+        if (ARCH_TYPE == 1) begin : reverse_feed // higher performance, slightly higher resource cost
             always_ff @(posedge i_clk) begin
                 if (i_rst_n == 1'b0) begin
                     corr_reg <= {11{1'b0}};
