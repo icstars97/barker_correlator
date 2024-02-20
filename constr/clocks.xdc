@@ -1,1 +1,1 @@
-create_clock -period 2.000 [get_ports i_clk]
+create_clock -period 1.600 [get_ports i_clk]
