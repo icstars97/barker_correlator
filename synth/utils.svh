@@ -19,4 +19,7 @@ interface axis_1bit;
     );
 endinterface
 
+function logic mjr4(input logic [3:0] a);
+        mjr4 = (a[0] & a[1] & a[2]) | (a[0] & a[1] & a[3]) | (a[0] & a[2] & a[3]) | (a[1] & a[2] & a[3]);
+endfunction
 `endif
