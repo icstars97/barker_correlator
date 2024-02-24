@@ -5,15 +5,23 @@ module oversample_circuit_tb();
     localparam int CYCLE_COUNT = 16;
     localparam int ARCH_TYPE = 1;
 
+    localparam int PAUSE_MIN = 0;
+    localparam int PAUSE_MAX = 32;
+    int vector_seed = 99;
+    int pause_seed = 99;
+    int pause_length = 0;
+
     int i;
     int j;
     int k;
     int l;
+    int m;
     logic clk = 1'b1;
 
     logic mon_d = 1'b0;;
 
     logic [3:0] test_data;
+    logic [3:0] prev_test_data;
     logic in_d;
     logic in_v = 0;
     logic rst_n = 1;
@@ -42,17 +50,20 @@ module oversample_circuit_tb();
         for (i=0; i<4; i=i+1) @(posedge clk);
 
         for (i=0; i<CYCLE_COUNT; i=i+1) begin
-            test_data = $random;
+            test_data = $dist_uniform(vector_seed, 0, 15);
             for (j=0; j<4; j=j+1) begin
-                in_d = test_data[j];
-                in_v = 1'b1;
+                in_d <= test_data[j];
+                in_v <= 1'b1;
                 @(posedge clk);
-
+                prev_test_data = test_data;
+                pause_length = $dist_uniform(pause_seed, PAUSE_MIN, PAUSE_MAX);
+                if (pause_length > 0) begin
+                    in_v <= 1'b0;
+                    for (m=0; m<pause_length; m=m+1) @(posedge clk);
+                end
 
             end
-            in_v = 1'b0;
-            @(negedge ovs_v);
-            @(posedge clk);
+
         end
     end
 
@@ -143,14 +154,16 @@ module oversample_circuit_tb();
         for (k=0; k<CYCLE_COUNT; k=k+1) begin
             td_popcount = 0;
             @(posedge ovs_v);
-            for (l=0; l<$size(test_data); l=l+1) td_popcount = td_popcount + test_data[l];
-            if (td_popcount > $size(test_data) / 2) mon_d = 1'b1;
+            for (l=0; l<$size(prev_test_data); l=l+1) td_popcount = td_popcount + prev_test_data[l];
+            if (td_popcount > $size(prev_test_data) / 2) mon_d = 1'b1;
             else mon_d = 1'b0;
             if (mon_d != ovs_d) begin
+                @(posedge clk);
                 $display("error: expected data does not match actual");
                 $finish();
             end
         end
+        @(posedge clk);
         $finish();
     end
 endmodule
