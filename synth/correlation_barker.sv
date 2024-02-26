@@ -19,9 +19,8 @@ module correlation_barker #(
     logic tlast_q;
 
     logic [10:0] ref_reg;
-    logic tvalid_q;
     logic mismatch_reg;
-    logic [1:0] tlast_reg;
+
     generate
         if (ARCH_TYPE == 0) begin : dummy // low performance, low resource cost
             always_ff @(posedge i_clk) begin
@@ -60,32 +59,20 @@ module correlation_barker #(
         if (ARCH_TYPE == 1) begin : reverse_feed // higher performance, slightly higher resource cost
             always_ff @(posedge i_clk) begin
                 if (i_rst_n == 1'b0) begin
-                    corr_reg <= {11{1'b0}};
-                    s_tready <= 1'b0;
                     s_tready <= 1'b0;
                     m_tuser <= 1'b0;
                     m_tvalid <= 1'b0;
                     tlast_q <= 1'b0;
-                    tvalid_q <= 1'b0;
                     mismatch_reg <= 1'b0;
-                    tlast_reg<= 2'b00;
                     ref_reg <= TARGET_SEQ;
                 end else begin
-                    if ((s_tvalid == 1'b1) && (s_tready == 1'b1)) begin
-                        corr_reg <= {corr_reg[9:0], s_tdata};
-                        tvalid_q <= 1'b1;
-                        tlast_reg[0] <= s_tlast;
-                    end else begin
-                        tvalid_q <= 1'b0;
-                    end
-                    if (tvalid_q == 1'b1) begin
-                        mismatch_reg <= mismatch_reg | (corr_reg[0] ^ ref_reg[10]);
-                        ref_reg <={ref_reg[9:0], ref_reg[10]};
-                        tlast_reg[1] <= tlast_reg[0];
-                    end
-                    if ((tlast_reg[1] == 1'b1) && (m_tready == 1'b1)) begin
+                    if (s_tvalid == 1'b1) begin
+                        mismatch_reg <= mismatch_reg | (s_tdata ^ ref_reg[10]);
+                        ref_reg <= {ref_reg[9:0], ref_reg[10]};
+                        tlast_q <= s_tlast;
+                    end else if (m_tready == 1'b1) tlast_q <= 1'b0;
+                    if ((tlast_q == 1'b1) && (m_tready == 1'b1)) begin
                         m_tvalid <= 1'b1;
-                        tlast_reg[1] <= 1'b0;
                         m_tuser <= ~mismatch_reg;
                         mismatch_reg <= 1'b0;
                     end else begin
