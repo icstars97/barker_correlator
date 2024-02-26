@@ -33,12 +33,10 @@ module correlation_barker #(
                     m_tvalid <= 1'b0;
                     tlast_q <= 1'b0;
                 end else begin
-                    if ((s_tvalid == 1'b1) && (s_tready == 1'b1)) begin
+                    if (s_tvalid == 1'b1) begin
                         corr_reg <= {corr_reg[9:0], s_tdata};
                         tlast_q <= s_tlast;
-                    end else begin
-                        tlast_q <= 1'b0;
-                    end
+                    end else if (m_tready == 1'b1) tlast_q <= 1'b0;
                     // all data latched, ready to xor
                     if ((tlast_q == 1'b1) && (m_tready == 1'b1)) begin
                         m_tvalid <= 1'b1;
