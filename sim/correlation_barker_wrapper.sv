@@ -8,16 +8,26 @@ module correlation_barker_wrapper #(
     axis_1bit s_axis,
     axis_1bit m_axis
 );
+    axis_1bit ovs_axis();
+
+    axis_oversample #(
+        .ARCH_TYPE(0)
+    ) axis_ovs (
+        .i_clk(i_clk),
+        .i_rst_n(i_rst_n),
+        .s_axis(s_axis),
+        .m_axis(ovs_axis.master)
+    );
 
     correlation_barker #(
         .ARCH_TYPE(ARCH_TYPE)
     ) correlator_core (
         .i_clk(i_clk),
         .i_rst_n(i_rst_n),
-        .s_tdata(s_axis.tdata),
-        .s_tvalid(s_axis.tvalid),
-        .s_tlast(s_axis.tlast),
-        .s_tready(s_axis.tready),
+        .s_tdata(ovs_axis.tdata),
+        .s_tvalid(ovs_axis.tvalid),
+        .s_tlast(ovs_axis.tlast),
+        .s_tready(ovs_axis.tready),
         .m_tuser(m_axis.tuser),
         .m_tvalid(m_axis.tvalid),
         .m_tready(m_axis.tready)
