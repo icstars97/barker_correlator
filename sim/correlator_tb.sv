@@ -8,7 +8,7 @@ module correlator_tb();
     localparam int PER_CLK_CORR = 10;
 
     logic clk25 = 1'b0;
-    logic clk_corr = 1'b0;
+    logic clk_corr = 1'b1;
     logic rst_n = 1'b0;
 
     int i;
@@ -31,23 +31,8 @@ module correlator_tb();
 
     // test pattern generator
     test_seq_gen u_stimulus_gen (
-        .i_clk(clk25),
+        .i_clk(clk_corr),
         .i_rst_n(rst_n),
-        .m_axis_tdata(gen_m_axis_tdata),
-        .m_axis_tvalid(gen_m_axis_tvalid),
-        .m_axis_tlast(gen_m_axis_tlast),
-        .m_axis_tready(gen_m_axis_tready)
-    );
-
-    // pass test data stream to dut clock domain
-    axis_resync u_gen_fifo (
-        .m_aclk(clk_corr),
-        .s_aclk(clk25),
-        .s_aresetn(rst_n),
-        .s_axis_tdata(gen_m_axis_tdata),
-        .s_axis_tvalid(gen_m_axis_tvalid),
-        .s_axis_tlast(gen_m_axis_tlast),
-        .s_axis_tready(gen_m_axis_tready),
         .m_axis_tdata(corr_s_axis.tdata),
         .m_axis_tvalid(corr_s_axis.tvalid),
         .m_axis_tlast(corr_s_axis.tlast),
@@ -55,7 +40,7 @@ module correlator_tb();
     );
 
     correlation_barker_wrapper #(
-        .ARCH_TYPE(0)
+        .ARCH_TYPE(1)
     ) u_dut (
         .i_clk(clk_corr),
         .i_rst_n(rst_n),
@@ -65,7 +50,7 @@ module correlator_tb();
 
     // compare correct response with actual
     test_mon #(
-        .CYCLE_COUNT(4)
+        .CYCLE_COUNT(8192)
     ) u_monitor (
         .i_clk(clk_corr),
         .i_rst_n(rst_n),
