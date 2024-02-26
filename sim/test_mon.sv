@@ -15,15 +15,19 @@ module test_mon #(
 
 
     int i;
+    int j;
+    int k;
+    int l;
+    int m;
 
     int tready_seed = 99;
     int tready_interval;
-    logic tlast_q;
-    logic tvalid_q;
     logic corr_mon;
 
     logic [10:0] gen_data_reg;
     int cycle_cnt;
+
+    int tdata_sample_cnt;
 
     initial begin : tready_gen
         dut_s_axis.tready = 1'b0;
@@ -36,36 +40,39 @@ module test_mon #(
         end
     end
 
-    always @(posedge i_clk) begin
-        if (i_rst_n == 1'b0) begin
-            cycle_cnt <= 0;
+    initial begin : input_bus_monitor
+        for (m=0; m< CYCLE_COUNT; m=m+1) begin
             gen_data_reg <= {11{1'b0}};
-            tlast_q <= 1'b0;
-            tvalid_q <= 1'b0;
-            corr_mon <= 1'b0;
-        end else begin
-            if ((gen_s_axis.tvalid == 1'b1) && (gen_s_axis.tready == 1'b1)) begin
-                gen_data_reg <= {gen_data_reg[9:0], gen_s_axis.tdata};
-                tlast_q <= gen_s_axis.tlast;
-            end else begin
-                tlast_q <= 1'b0;
-            end
-            if (tlast_q == 1'b1) begin
-                if (gen_data_reg == GOLDEN_SEQ) corr_mon <= 1'b1;
-                else corr_mon <= 1'b0;
-            end
-
-            if (cycle_cnt == CYCLE_COUNT) $finish;
-            tvalid_q <= dut_s_axis.tvalid;
-            if ((dut_s_axis.tvalid == 1'b1) && (tvalid_q == 1'b0)) begin
-                cycle_cnt <= cycle_cnt + 1;
-                if (corr_mon != dut_s_axis.tuser) begin
-                    $display("error: dut response does not match expected");
-                    $finish;
+            for (j=10; j>=0; j=j-1) begin
+                l=0;
+                tdata_sample_cnt = 0;
+                while(l < 4) begin
+                    @(posedge i_clk);
+                    if (gen_s_axis.tvalid == 1'b1) begin
+                        tdata_sample_cnt = tdata_sample_cnt + gen_s_axis.tdata;
+                        l = l + 1;
+                    end
                 end
-                corr_mon <= 1'b0;
+                if (tdata_sample_cnt > 2) gen_data_reg[j] = 1'b1;
+                else  gen_data_reg[j] = 1'b0;
+            end
+            if (gen_data_reg == GOLDEN_SEQ) corr_mon <= 1'b1;
+            else corr_mon <= 1'b0;
+        end
+        @(negedge dut_s_axis.tvalid);
+        $display("simulation finished");
+        $finish();
+    end
+
+    initial begin : output_bus_monitor
+        forever begin
+            @(posedge i_clk);
+            if (dut_s_axis.tvalid == 1'b1) begin
+                if (dut_s_axis.tuser != corr_mon) begin
+                    $display("error: dut tuser output and expected response do not match");
+                    $finish();
+                end
             end
         end
-
     end
 endmodule
